@@ -172,53 +172,39 @@ type Beam struct {
 }
 
 func countSplits(lines []string) int {
-	// Encontrar posición inicial de S
 	startCol := strings.Index(lines[0], "S")
-
-	// Cola de rayos a procesar
 	queue := []Beam{{row: 1, col: startCol}}
-
-	// Set para rastrear posiciones YA PROCESADAS
 	visited := make(map[[2]int]bool)
-
-	// Set para rastrear divisores contados
 	splitsSeen := make(map[[2]int]bool)
 
 	totalSplits := 0
 
 	for len(queue) > 0 {
-		// Tomar el primer elemento de la cola
 		beam := queue[0]
 		queue = queue[1:]
 
 		row, col := beam.row, beam.col
 
-		// Verificar límites
 		if row >= len(lines) || col < 0 || col >= len(lines[0]) {
 			continue
 		}
 
-		// Si ya procesamos esta posición, SKIP
 		key := [2]int{row, col}
 		if visited[key] {
 			continue
 		}
 		visited[key] = true
 
-		// Si encontramos un divisor ^
 		if lines[row][col] == '^' {
-			// Solo contar si no lo hemos contado antes
 			if !splitsSeen[key] {
 				splitsSeen[key] = true
 				totalSplits++
 			}
-			// Añadir los dos nuevos rayos (izquierda y derecha)
 			queue = append(queue, Beam{row + 1, col - 1})
 			queue = append(queue, Beam{row + 1, col + 1})
 			continue
 		}
 
-		// Si es espacio vacío, continuar hacia abajo
 		if lines[row][col] == '.' {
 			queue = append(queue, Beam{row + 1, col})
 		}
@@ -227,9 +213,36 @@ func countSplits(lines []string) int {
 	return totalSplits
 }
 
+func dfsWithCache(lines []string, row, col int, cache map[[2]int]int) int {
+	if row >= len(lines) || col < 0 || col >= len(lines[0]) {
+		return 1
+	}
+	key := [2]int{row, col}
+	if val, ok := cache[key]; ok {
+		return val
+	}
+	result := 0
+
+	if lines[row][col] == '^' {
+		left := dfsWithCache(lines, row+1, col-1, cache)
+		right := dfsWithCache(lines, row+1, col+1, cache)
+		result = left + right
+	} else if lines[row][col] == '.' {
+		result = dfsWithCache(lines, row+1, col, cache)
+	} else {
+		result = 1
+	}
+
+	cache[key] = result
+	return result
+}
+
 func main() {
 	content := strings.Split(strings.TrimSpace(text), "\n")
-	s := countSplits(content)
-	println(s)
+	println(countSplits(content))
+	start := strings.Index(content[0], "S")
+	cache := make(map[[2]int]int)
+	result := dfsWithCache(content, 1, start, cache)
+	println(result)
 
 }
