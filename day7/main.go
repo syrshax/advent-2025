@@ -223,13 +223,14 @@ func dfsWithCache(lines []string, row, col int, cache map[[2]int]int) int {
 	}
 	result := 0
 
-	if lines[row][col] == '^' {
+	switch lines[row][col] {
+	case '^':
 		left := dfsWithCache(lines, row+1, col-1, cache)
 		right := dfsWithCache(lines, row+1, col+1, cache)
 		result = left + right
-	} else if lines[row][col] == '.' {
+	case '.':
 		result = dfsWithCache(lines, row+1, col, cache)
-	} else {
+	default:
 		result = 1
 	}
 
